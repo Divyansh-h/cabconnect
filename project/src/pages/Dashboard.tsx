@@ -3,8 +3,7 @@ import { useUser } from '@clerk/clerk-react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { MapPin, Navigation } from 'lucide-react';
 import VehiclePanel from '../components/VehiclePanel';
-
-
+import ConfirmRidePopUp from '../components/ConfirmRidePopUp'; // ✅ Import added
 
 interface Location {
   lat: number;
@@ -23,6 +22,7 @@ export default function Dashboard() {
   const [animatedMarker, setAnimatedMarker] = useState<google.maps.Marker | null>(null);
   const [showVehiclePanel, setVehiclePanel] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+  const [showConfirmRidePanel, setConfirmRidePanel] = useState(false); // ✅ Added
 
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
@@ -164,7 +164,7 @@ export default function Dashboard() {
   const selectVehicle = (type: string) => {
     setSelectedVehicle(type);
     setVehiclePanel(false);
-    // Proceed to next step here if needed
+    setConfirmRidePanel(true); // ✅ Show ConfirmRidePopUp after selecting vehicle
   };
 
   const fare = {
@@ -236,8 +236,23 @@ export default function Dashboard() {
           <VehiclePanel
             fare={fare}
             setVehiclePanel={setVehiclePanel}
-            setConfirmRidePanel={() => {}} // or implement if needed
+            setConfirmRidePanel={setConfirmRidePanel} // ✅ Can be used inside VehiclePanel if needed
             selectVehicle={selectVehicle}
+          />
+        </div>
+      )}
+
+      {showConfirmRidePanel && selectedVehicle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm">
+          <ConfirmRidePopUp
+            selectedVehicle={selectedVehicle}
+            fare={fare[selectedVehicle as keyof typeof fare]}
+            onConfirm={() => {
+              setConfirmRidePanel(false);
+              // 🚀 TODO: Handle confirmed ride logic
+              console.log('Ride confirmed with', selectedVehicle, 'fare:', fare[selectedVehicle]);
+            }}
+            onCancel={() => setConfirmRidePanel(false)}
           />
         </div>
       )}

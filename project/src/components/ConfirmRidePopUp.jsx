@@ -1,47 +1,83 @@
-import React, { useState } from 'react';
-import ConfirmRidePopUp from './ConfirmRidePopUp';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
-const VehiclePanel = ({ distance, onClose }) => {
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [showConfirmRide, setShowConfirmRide] = useState(false);
+export default function ConfirmRidePopUp({
+  fare = 0,
+  onClose,
+  onConfirm
+}) {
+  const [isLoading, setIsLoading] = useState(false);
 
-  const rideInfo = {
-    _id: 'ride123',
-    user: {
-      fullname: {
-        firstname: 'Divyansh'
-      }
-    },
-    pickup: 'Bennett University',
-    destination: 'FRI Dehradun',
-    fare: 120 + (selectedVehicle === 'SUV' ? 50 : selectedVehicle === 'Sedan' ? 30 : 10)
-  };
+  useEffect(() => {
+    console.log("💰 Fare:", fare);
+  }, [fare]);
 
-  const handleVehicleSelect = (vehicleType) => {
-    setSelectedVehicle(vehicleType);
-    setShowConfirmRide(true);
+  const handleConfirm = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      onConfirm();
+    }, 2000);
   };
 
   return (
-    <div className='absolute bottom-0 left-0 right-0 bg-white rounded-t-xl shadow-md p-5'>
-      {!showConfirmRide ? (
-        <>
-          <h3 className='text-xl font-semibold mb-4'>Select a Cab</h3>
-          <div className='flex flex-col gap-4'>
-            <button onClick={() => handleVehicleSelect('Hatchback')} className='p-4 bg-gray-200 rounded-lg'>Hatchback - ₹{120 + 10}</button>
-            <button onClick={() => handleVehicleSelect('Sedan')} className='p-4 bg-gray-200 rounded-lg'>Sedan - ₹{120 + 30}</button>
-            <button onClick={() => handleVehicleSelect('SUV')} className='p-4 bg-gray-200 rounded-lg'>SUV - ₹{120 + 50}</button>
-          </div>
-        </>
-      ) : (
-        <ConfirmRidePopUp
-          ride={rideInfo}
-          setRidePopupPanel={onClose}
-          setConfirmRidePopupPanel={setShowConfirmRide}
-        />
-      )}
-    </div>
-  );
-};
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: 50 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: 50 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-2xl shadow-2xl p-6 w-11/12 max-w-md"
+        >
+          <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">
+            Ride Confirmation
+          </h2>
 
-export default VehiclePanel;
+          <div className="text-center text-gray-700 mb-6">
+            <p className="mb-2">
+              Estimated Fare: ₹{fare.toFixed(2)}
+            </p>
+            <p className="text-sm text-gray-600 mt-4">
+              We’ll revert back to you in less than 20 minutes. Sit tight!
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className={`bg-blue-900 text-white px-6 py-2 rounded-lg shadow flex items-center gap-2 transition ${
+                isLoading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-blue-800'
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Confirm'
+              )}
+            </button>
+
+            {!isLoading && (
+              <button
+                onClick={onClose}
+                className="text-gray-600 hover:text-gray-900 transition"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
